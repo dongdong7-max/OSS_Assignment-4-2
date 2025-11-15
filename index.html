@@ -13,10 +13,13 @@
     
     <form>
         <h4>학생 관리 (조회/수정/삭제)</h4>
-        <p>MockAPI의 고유 'id' (숫자 1, 2, 3...)를 입력하세요.</p>
+        
+        MockAPI ID: <input type="text" id="mockapi_id" placeholder="MockAPI ID (1, 2, 3...)"><br>
+        
+        student number: <input type="text" id="view_student_id" placeholder="student_id (가져오기 시 표시됨)" disabled><br>
+
         name: <input type="text" id="student_name" placeholder="name"><br>
         age: <input type="number" id="student_age" placeholder="age"><br>
-        student number: <input type="text" id="student_id" placeholder="student_id"><br>
         grade:
         <select id="student_grade">
             <option>A</option>
@@ -77,10 +80,10 @@
     <script>
         $(function() {
 
-            
+            // MockAPI URL
             const MOCKAPI_URL = "https://6915289384e8bd126af8d850.mockapi.io/student";
 
-            // [추가] "전체 학생 목록 보기" 기능
+            // "전체 학생 목록 보기" 기능
             $("#list_btn").click(function() {
                 const xhr = new XMLHttpRequest();
                 xhr.open("GET", MOCKAPI_URL);
@@ -102,32 +105,28 @@
             });
 
 
+            // "학생 데이터 추가" 기능
             $("#save_add_btn").click(function() {
                 alert("add student?");
-
-                const newId = $("#add_student_id").val(); // Modal 폼(#add_*)에서 값 가져오기
                 const xhr = new XMLHttpRequest();
-                xhr.open("POST", MOCKAPI_URL); // URL 변경
+                
+                // [수정됨] 따옴표 제거 ("MOCKAPI_URL" -> MOCKAPI_URL)
+                xhr.open("POST", MOCKAPI_URL); 
                 xhr.setRequestHeader("content-type", "application/json");
             
                 let data = {
-                    // MockAPI는 id를 자동 생성하므로, id 필드는 제외
-                    name: $("#add_student_name").val(), // Modal 폼(#add_*)에서 값 가져오기
-                    age: $("#add_student_age").val(), // Modal 폼(#add_*)에서 값 가져오기
-                    student_id: newId,
-                    student_grade: $("#add_student_grade").val() // Modal 폼(#add_*)에서 값 가져오기
+                    name: $("#add_student_name").val(),
+                    age: $("#add_student_age").val(), 
+                    student_id: $("#add_student_id").val(),
+                    student_grade: $("#add_student_grade").val()
                 }
                 xhr.send(JSON.stringify(data));
                 xhr.onload = () => {
-                    if (xhr.status === 201) { // 201 Created
+                    if (xhr.status === 201) { 
                         const res = JSON.parse(xhr.response);
                         alert(JSON.stringify(res));
-                        
-                        // Modal 닫기 (Bootstrap 5 API 사용)
                         var myModal = bootstrap.Modal.getInstance(document.getElementById('addModal'));
                         myModal.hide();
-
-                        // 목록 새로고침
                         $("#list_btn").click(); 
                     } else {
                         console.log(xhr.status, xhr.statusText);
@@ -135,73 +134,107 @@
                 }
             });
 
-           
+
+            // "학생 데이터 수정" 기능
             $("#update_btn").click(function() {
                 alert("update student?");
+                
+                // [수정됨] MockAPI ID 전용 입력칸(#mockapi_id)에서 ID를 가져옴
+                const idToUpdate = $("#mockapi_id").val(); 
+                if (!idToUpdate) {
+                    alert("MockAPI ID를 입력하세요.");
+                    return;
+                }
 
-                const idToUpdate = $("#student_id").val(); // 이 값이 MockAPI의 'id'여야 함
                 const xhr = new XMLHttpRequest();
-                xhr.open("PUT", MOCKAPI_URL + "/" + idToUpdate); // URL 변경
+                xhr.open("PUT", MOCKAPI_URL + "/" + idToUpdate); 
                 xhr.setRequestHeader("content-type", "application/json");
+                
                 let data = {
                     name: $("#student_name").val(),
                     age: $("#student_age").val(),
-                    student_id: $("#student_id").val(), // student_id 값도 같이 수정
+                    // [수정됨] 학번(student_id)은 'view_student_id' 값으로 유지 (수정되지 않음)
+                    student_id: $("#view_student_id").val(), 
                     student_grade: $("#student_grade").val()
-                };
+                };                
+                
                 xhr.send(JSON.stringify(data));
                 xhr.onload = () => {
                     if (xhr.status === 200) {
                         let res = JSON.parse(xhr.response);
                         alert(JSON.stringify(res));
-                        $("#list_btn").click(); // 목록 새로고침
+                        $("#list_btn").click(); 
                     } else {
                         console.log(xhr.status, xhr.statusText);
                     }
                 }
             });
 
+            // "학생 데이터 삭제" 기능
             $("#delete_btn").click(function() {
                 alert("delete student?");
 
-                const idToDelete = $("#student_id").val(); // 이 값이 MockAPI의 'id'여야 함
+                // [수정됨] MockAPI ID 전용 입력칸(#mockapi_id)에서 ID를 가져옴
+                const idToDelete = $("#mockapi_id").val(); 
+                if (!idToDelete) {
+                    alert("MockAPI ID를 입력하세요.");
+                    return;
+                }
+
                 const xhr = new XMLHttpRequest();
-                xhr.open("DELETE", MOCKAPI_URL + "/" + idToDelete); // URL 변경
+                xhr.open("DELETE", MOCKAPI_URL + "/" + idToDelete); 
                 xhr.setRequestHeader("content-type", "application/json");
                 xhr.send();
                 xhr.onload = () => {
                     if (xhr.status === 200) {
                         alert("삭제 성공");
-                        $("#list_btn").click(); // 목록 새로고침
+                        // 폼 초기화
+                        $("#mockapi_id").val('');
+                        $("#view_student_id").val('');
+                        $("#student_name").val('');
+                        $("#student_age").val('');
+                        
+                        $("#list_btn").click(); 
                     } else {
                         console.log(xhr.status, xhr.statusText);
                     }
                 }
             });
 
+            // "학생 데이터 가져오기" 기능
             $("#detail_btn").click(function() {
                 alert("detail student?");
 
-                const idToFetch = $("#student_id").val(); // 이 값이 MockAPI의 'id'여야 함
+                // [수정됨] MockAPI ID 전용 입력칸(#mockapi_id)에서 ID를 가져옴
+                const idToFetch = $("#mockapi_id").val(); 
+                if (!idToFetch) {
+                    alert("MockAPI ID를 입력하세요.");
+                    return;
+                }
+                
                 const xhr = new XMLHttpRequest();
-                xhr.open("GET", MOCKAPI_URL + "/" + idToFetch); // URL 변경
+                xhr.open("GET", MOCKAPI_URL + "/" + idToFetch); 
                 xhr.setRequestHeader("content-type", "application/json");
                 xhr.send();
                 xhr.onload = () => {
                     if (xhr.status === 200) {
                         let res = JSON.parse(xhr.response);
 
+                        // 데이터를 각 폼에 채워넣기
                         $("#student_name").val(res.name);
                         $("#student_age").val(res.age);
-                        $("#student_id").val(res.student_id); // student_id 필드 채우기
                         $("#student_grade").val(res.student_grade);
                         
-                        alert("데이터를 폼에 불러왔습니다. (MockAPI ID: " + res.id + ")");
+                        // [수정됨] 학번은 'view_student_id' (disabled) 칸에 표시
+                        $("#view_student_id").val(res.student_id); 
                         
-                       
-
+                        // 'mockapi_id' 칸은 그대로 유지됨
+                        
+                        alert("데이터를 폼에 불러왔습니다.");
+                        
                     } else {
                         console.log(xhr.status, xhr.statusText);
+                        alert("데이터 조회에 실패했습니다.");
                     }
                 }
             });
